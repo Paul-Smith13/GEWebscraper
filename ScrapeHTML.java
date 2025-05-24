@@ -81,11 +81,13 @@ public class ScrapeHTML {
 	
 	public String[] extractDates(String text) {
 		//Uses regex to find pattern we want
-		Pattern datePattern = Pattern.compile("\\d{4}/\\d{2}/\\d{2}");
+		//NOTE: HTML contains 2 lines for same date - 1 for dailyAvg, 1 for dailyVolume
+		//To-do: later incorporate daily volumes as attributes & exception handling if they don't have (e.g. bonds)
+		Pattern datePattern = Pattern.compile("average\\d+\\.push\\(\\[new Date\\('(\\d{4}/\\d{2}/\\d{2})");
 		Matcher matcher = datePattern.matcher(text);
 		List<String> newDates = new ArrayList<>();		
 		while (matcher.find()) {
-			String date = matcher.group();
+			String date = matcher.group(1);
 			newDates.add(date);
 			//System.out.println("Found date: " + date);
 		}
@@ -220,7 +222,7 @@ public class ScrapeHTML {
 		
 		Scanner s = new Scanner(System.in);
 		
-		String testHTML = "https://secure.runescape.com/m=itemdb_oldschool/Old+school+bond/viewitem?obj=13190";
+		String testHTML = "https://secure.runescape.com/m=itemdb_oldschool/Zulrah%27s+scales/viewitem?obj=12934";
 		String testStore = "TestFolder";
 				
 		ScrapeHTML s1 = new ScrapeHTML(testHTML, cwDir);
