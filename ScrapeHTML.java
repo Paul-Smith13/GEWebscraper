@@ -21,6 +21,7 @@ public class ScrapeHTML {
 	private long[] dailyAverages;
 	private long[] trendPoints;
 	private String[] dates;
+	private long[] dailyVolumes;
 	
 	//Constructor - only initialises url & storeLocation, other variables are initialised elsewhere.
 	public ScrapeHTML(String url, String storeToLocation) {
@@ -64,7 +65,12 @@ public class ScrapeHTML {
 		
 		//4. Get item name
 		this.setItemName(extractItemName(text));
-		System.out.println(this.getItemName());				
+		System.out.println(this.getItemName());
+		
+		//5. Get Daily Volumes (if not bond - bond volumes not published)
+		if (!this.getItemName().equals("Old School bond")) {
+			this.setDailyVolumes(extractDailyVolumes(operableText));
+		} 
 	}
 	
 	public String extractItemName(String text) {
@@ -78,6 +84,20 @@ public class ScrapeHTML {
 		return "Check - DNF";
 	}
 	
+	public long[] extractDailyVolumes(String text) {
+		Pattern itemNamePattern = Pattern.compile("trade\\d+\\.push\\(\\[new Date\\('[^']+'\\),\\s*(\\d+)\\s*\\]\\)");
+		Matcher matcher = itemNamePattern.matcher(text);
+		List<Long> foundVolumes = new ArrayList<>();
+		while (matcher.find()) {
+			long dailyVol = Long.parseLong(matcher.group(1));
+			foundVolumes.add(dailyVol);
+		}
+		long[] result = new long[foundVolumes.size()];
+		for (int i = 0; i < foundVolumes.size(); i++) {
+			result[i] = foundVolumes.get(i);
+		}
+		return result;
+	}
 	
 	public String[] extractDates(String text) {
 		//Uses regex to find pattern we want
@@ -164,16 +184,27 @@ public class ScrapeHTML {
 	
 	public void writeToFile() {
 		try (
-			Writer writeToFile = new BufferedWriter(new FileWriter("output.txt"));	
+			Writer writeToFile = new BufferedWriter(new FileWriter("output" + this.getItemName() + ".txt"));	
 			){
 			StringBuilder dataAsString = new StringBuilder();
-			for(int i = 0; i < this.getDates().length; i++) {
-				dataAsString.append( "Date: " + this.getDates()[i] + " trendPoint: " +
-				+ this.getDailyAvgerages()[i] + " dailyAverage: " +
-				+ this.getTrendPoints()[i] + ", \n"
-				);
+			if (!this.getItemName().equals("Old school bond")) {
+				for(int i = 0; i < this.getDates().length; i++) {
+					dataAsString.append( "Date: " + this.getDates()[i] + " trendPoint: " +
+					+ this.getDailyAvgerages()[i] + " dailyAverage: "
+					+ this.getTrendPoints()[i] + " dailyVolume: "
+					+ this.getDailyVolumes()[i] + ", \n"
+					);
+				}
+			} else {
+				for(int i = 0; i < this.getDates().length; i++) {
+					dataAsString.append( "Date: " + this.getDates()[i] + " trendPoint: " +
+					+ this.getDailyAvgerages()[i] + " dailyAverage: "
+					+ this.getTrendPoints()[i] + " dailyVolume: "
+					+ ", \n"
+					);
+				}
 			}
-			
+					
 			String writeObj = "|Item: " + this.getItemName() + ", \nURL: "
 					+ this.getURL() + "\nData: \n" 
 					+ dataAsString;
@@ -194,27 +225,15 @@ public class ScrapeHTML {
 	public void setHTMLContent(String htmlContent) {this.htmlContent = htmlContent;}
 	public String getItemName() {return this.itemName;}
 	
-	public void setItemName(String name) {
-		this.itemName = name;
-	}
-	public long[] getDailyAvgerages() {
-		return this.dailyAverages;
-	}
-	public void setDailyAverages(long[] dailyAvgs) {
-		this.dailyAverages = dailyAvgs;
-	}
-	public long[] getTrendPoints() {
-		return this.trendPoints;
-	}
-	public void setTrendPoints(long[] trendPoints) {
-		this.trendPoints = trendPoints;
-	}	
-	public String[] getDates() {
-		return this.dates;
-	}
-	public void setDates(String[] newDates) {
-		this.dates = newDates;
-	}
+	public void setItemName(String name) {this.itemName = name;}
+	public long[] getDailyAvgerages() {return this.dailyAverages;}
+	public void setDailyAverages(long[] dailyAvgs) {this.dailyAverages = dailyAvgs;}
+	public long[] getTrendPoints() {return this.trendPoints;}
+	public void setTrendPoints(long[] trendPoints) {this.trendPoints = trendPoints;}	
+	public String[] getDates() {return this.dates;}
+	public void setDates(String[] newDates) {this.dates = newDates;}
+	public void setDailyVolumes(long[] dailyVolume) {this.dailyVolumes = dailyVolume;}
+	public long[] getDailyVolumes() {return this.dailyVolumes;}
 	
 	public static void main(String[] args) {
 		String cwDir = System.getProperty("user.dir");
@@ -222,7 +241,7 @@ public class ScrapeHTML {
 		
 		Scanner s = new Scanner(System.in);
 		
-		String testHTML = "https://secure.runescape.com/m=itemdb_oldschool/Zulrah%27s+scales/viewitem?obj=12934";
+		String testHTML = "https://secure.runescape.com/m=itemdb_oldschool/Old+school+bond/viewitem?obj=13190";
 		String testStore = "TestFolder";
 				
 		ScrapeHTML s1 = new ScrapeHTML(testHTML, cwDir);
@@ -233,6 +252,7 @@ public class ScrapeHTML {
 		
 		//Finally write to file:
 		s1.writeToFile();
+		
 		
 	}
 
