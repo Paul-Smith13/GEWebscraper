@@ -156,7 +156,7 @@ public class ScrapeHTML {
 			
 			if (responseCode >= 200 && responseCode < 400) {
 				System.out.println("✓ URL is accessible");
-				//System.out.println("URL Content: " + connection.getContent());
+				//System.out.println("URL Content: " + connection.getContent()); //<-- if you want to see content of the HTML
 				
 				InputStream inputStream = connection.getInputStream();
 				BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -169,17 +169,15 @@ public class ScrapeHTML {
 				this.setHTMLContent(content.toString());
 				//System.out.println("Actual HTML content: " + this.getHTMLContent()); //Comment back in if we need to look at structure of htmlContent.
 				this.searchWithinText(this.getHTMLContent());
-				reader.close();
-				
+				reader.close();			
 			} else {
 				System.out.println("✗ URL returned error code: " + responseCode);
 			}
-			
-			connection.disconnect();
-			
+			connection.disconnect();			
 		} catch (IOException e) {
 			System.err.println(" Accessing URL generated error: " + e.getMessage());
 		}
+		
 	}
 	
 	public void writeToFile() {
@@ -203,8 +201,7 @@ public class ScrapeHTML {
 					+ ", \n"
 					);
 				}
-			}
-					
+			}			
 			String writeObj = "|Item: " + this.getItemName() + ", \nURL: "
 					+ this.getURL() + "\nData: \n" 
 					+ dataAsString;
@@ -216,9 +213,30 @@ public class ScrapeHTML {
 		}
 	}
 	
+	public boolean isValidURL(String checkThisURL) {
+		//First check start of URL (should begin with geURLStandard)
+		String geURLStandard = "https://secure.runescape.com/m=itemdb_oldschool/";
+		//String urlFirstCheck = checkThisURL.substring(0, 47);		
+		if (checkThisURL.startsWith(geURLStandard)) {
+			System.out.println("URL follows correct beginning format.");
+			//Second check ending of URL (should end with /viewitem?obj=00)
+			Pattern checkFinalPattern = Pattern.compile("viewitem\\?obj=\\d+");
+			Matcher matchFinalPart = checkFinalPattern.matcher(checkThisURL);
+			if (matchFinalPart.find()) {
+				System.out.println("URL follows correct ending format.");
+				return true;
+			} else {
+				System.err.println("URL doesn't follow correct ending format.");
+			}
+		} else {
+			System.err.println("URL not recognised following correct beginning format.");
+		}
+		return false;
+	}
+	
 	//Getters and setters
 	public String getURL() {return this.url;}
-	public void setHTML(String html) {this.url = html;}
+	public void setURL(String url) {this.url = url;}
 	public String getStoreLocation(){return this.storeLocation;}	
 	public void setStoreLocation(String storeLocation) {this.storeLocation = storeLocation;}
 	public String getHTMLContent() {return htmlContent;}
@@ -240,13 +258,17 @@ public class ScrapeHTML {
 		System.out.println(cwDir);
 		
 		Scanner s = new Scanner(System.in);
-		
-		String testHTML = "https://secure.runescape.com/m=itemdb_oldschool/Old+school+bond/viewitem?obj=13190";
-		String testStore = "TestFolder";
-				
+		System.out.println("--- GE PRICE, TREND, VOLUME DATA WEBSCRAPER ---");
+		System.out.println("Enter an item's URL from the GE Website to obtain data for:");
+		String testHTML = s.nextLine().trim();				
 		ScrapeHTML s1 = new ScrapeHTML(testHTML, cwDir);
-		//ScrapeHTML s2 = new ScrapeHTML(testHTML, cwDir);
-		System.out.println(s1.getURL() + " " + s1.getStoreLocation());
+		//Need to handle if user puts in invalid HTML
+		while (!s1.isValidURL(s1.getURL())) {
+			System.err.println("Invalid, URL. Re-enter URL: ");
+			s1.setURL(s.nextLine().trim());
+		}
+		s.close();	
+		//System.out.println(s1.getURL() + " " + s1.getStoreLocation());
 
 		s1.urlCanAccess();
 		
