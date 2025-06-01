@@ -1,3 +1,5 @@
+Don't expect further progress on this: copy and pasted script into GEDataVisualiser to be used in conjunction with that project's functionalities.
+
 Takes item URLs for the OSRS (2007scape) GE website: https://secure.runescape.com/m=itemdb_oldschool/
 Checks that the URL is valid, following the expected prefix and suffix.
 If true, then establishes a connection with website, gets the raw HTML as text.
